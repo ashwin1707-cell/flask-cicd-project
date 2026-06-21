@@ -5,19 +5,29 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                git 'https://github.com/ashwin1707-cell/flask-cicd-project.git'
+                git branch: 'main',
+                    url: 'https://github.com/ashwin1707-cell/flask-cicd-project.git'
             }
         }
 
         stage('Build Image') {
             steps {
-                bat 'docker build -t ashwin0717/flask-app:v3 .'
+                sh 'docker build -t ashwin0717/flask-app:v3 .'
             }
         }
 
         stage('Push Image') {
             steps {
-                bat 'docker push ashwin0717/flask-app:v3'
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-creds',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh '''
+                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                    docker push ashwin0717/flask-app:v3
+                    '''
+                }
             }
         }
 
